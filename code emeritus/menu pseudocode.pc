@@ -1,0 +1,61 @@
+/* menu pseudo-code.. several things undefined, not supposed to compile */
+
+#include <avr/io.h>
+#include <util/delay.h>
+#include <inttypes.h>
+#include <stdio.h>
+
+static uint8_t volume = 0;
+static int8_t bass = 0, treb = 0;
+static uint8_t tcmode = 1;
+static uint8_t brightness = 7;
+
+/* TODO: input names */
+
+
+void volume_increase() {
+	volume++;
+	vfd_clear();
+	printf("Volume> %" PRIu8, volume);
+}
+
+void volume_decrease() {
+	volume--;
+	vfd_clear();
+	printf("Volume> %" PRIu8, volume);
+}
+
+void menu_idle() {
+	/*codecodecode*/		// check for button press
+	unsigned int cleartime = 0;
+	int i;
+	if((PINC & (1<<REM_RX)) == 0) i = rem_getpress();	// check for remote
+	switch(i) {
+	case REM_VOL_UP:
+		volume_increase();
+		cleartime = 3000;
+		break;
+	case REM_VOL_DN:
+		volume_decrease();
+		cleartime = 3000;
+		break;
+	/*case REM_RIGHT:
+		input_next();
+		break;
+	case REM_LEFT:
+		input_prev();
+		break;
+	case REM_ENTER:
+		menu_settings();
+		break;*/
+	}
+	_delay_ms(10);
+	if(cleartime > 0) {
+		cleartime--;
+		if(cleartime <= 0) {
+			vfd_clear();
+			printf("What do I do now?");
+		}
+	}
+}
+
