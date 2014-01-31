@@ -32,29 +32,26 @@
 
 // on PORTC
 // Prefix should be changed to PINC
-#define BUT_ENTER 0
-#define BUT_BACK 1
-#define BUT_VOLUP 2
-#define BUT_VOLDN 3
-#define BUT_LEFT 4
-#define BUT_RIGHT 5
-#define BUT_MASK ((1<<BUT_ENTER)|(1<<BUT_BACK)| \
-			  	 (1<<BUT_VOLUP)|(1<<BUT_VOLDN)| \
-			  	 (1<<BUT_LEFT)|(1<<BUT_RIGHT))
+#define PINC_ENTER 0
+#define PINC_BACK 1
+#define PINC_VOLUP 2
+#define PINC_VOLDN 3
+#define PINC_LEFT 4
+#define PINC_RIGHT 5
+#define PINC_BUTMASK ((1<<PINC_ENTER)|(1<<PINC_BACK)| \
+			  	 (1<<PINC_VOLUP)|(1<<PINC_VOLDN)| \
+			  	 (1<<PINC_LEFT)|(1<<PINC_RIGHT))
 
 // PCINT for PORTC
 // Prefix should be changed to PCI1
-#define PC_ENTER PCINT8
-#define PC_BACK PCINT9
-#define PC_VOLUP PCINT10
-#define PC_VOLDN PCINT11
-#define PC_LEFT PCINT12
-#define PC_RIGHT PCINT13
-#define PC_MASK ((1<<BUT_ENTER)|(1<<BUT_BACK)| \
-				(1<<BUT_VOLUP)|(1<<BUT_VOLDN)| \
-				(1<<BUT_LEFT)|(1<<BUT_RIGHT))
-
-//// on PORTD
-//#define REM_RX 0	// deprecated; part of code emeritus
+#define PCI1_ENTER PCINT8
+#define PCI1_BACK PCINT9
+#define PCI1_VOLUP PCINT10
+#define PCI1_VOLDN PCINT11
+#define PCI1_LEFT PCINT12
+#define PCI1_RIGHT PCINT13
+#define PCI1_MASK ((1<<PCI1_ENTER)|(1<<PCI1_BACK)| \
+				(1<<PCI1_VOLUP)|(1<<PCI1_VOLDN)| \
+				(1<<PCI1_LEFT)|(1<<PCI1_RIGHT))
 
 #endif /* PINS_H_ */

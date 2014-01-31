@@ -27,10 +27,10 @@
 #include "inputnames.h"
 #include "preamp.h"
 #include "pins.h"
+#include "buttons.h"
 #include "lang.h"
 #include "ui.h"
 
-#define DEBOUNCE_TIME 40	// debounce time, in milliseconds
 #define UI_HOLD_TIME 30		// time to hold volume value on display, in centiseconds
 
 static volatile uint8_t idle_timeout = UI_HOLD_TIME;	// centisecond idle timeout counter
@@ -56,11 +56,11 @@ static void ui_showtonetreb();
  * when uiloop is called.
  */
 void uiinit() {
-	DDRC &= ~(BUT_MASK);			// make sure all buttons are inputs
-	PORTC |= BUT_MASK;				// inputs with pullups, that is
+	DDRC &= ~(PINC_BUTMASK);		// make sure all buttons are inputs
+	PORTC |= PINC_BUTMASK;			// inputs with pullups, that is
 	
 	PCICR |= 1<<PCIE1;				// enable pin-change interrupt
-	PCMSK1 |= PC_MASK;				// and enable each button interrupt
+	PCMSK1 |= PCI1_MASK;			// and enable each button interrupt
 	
 	set_sleep_mode(SLEEP_MODE_IDLE);// set IDLE as the sleep mode
 	
@@ -102,28 +102,6 @@ static void ui_idle() {
 	ui_showinput();			// show current input while idle
 	pre_save();				// save volume, tone, input settings
 	vfd_idlebrightness();	// set display to idle brightness
-	//vfd_save();			// TODO: move this code to brightness menu
-}
-
-/*
- * Saves and then debounces button input
- * Returns char with pressed buttons logic 1
- * Clears PCINT1 caused by button lifting
- * TODO: move to a separate file to handle encoders
- */
-static char ui_getbuttons() {
-	char pressed = (~PINC) & BUT_MASK;
-	
-	while(!pressed) pressed = (~PINC) & BUT_MASK;	// fixes issues with turn-on bounce
-	
-	// wait for continuous DEBOUNCE_TIME ms of all buttons open
-	for(uint8_t timeleft = DEBOUNCE_TIME; timeleft > 0; timeleft--) {
-		if((PINC & BUT_MASK) != BUT_MASK) timeleft = DEBOUNCE_TIME;
-		_delay_ms(1);
-	}
-	PCIFR = 1<<PCIF1;	// clear PCINT1 caused by switch lifting
-	
-	return pressed;
 }
 
 /*
@@ -131,7 +109,7 @@ static char ui_getbuttons() {
  */
 static void ui_rootmenu() {
 	uint8_t choice = 0;
-	char pressed;
+	enum but_type pressed;
 	
 	// show user a list of choices and allow selection
 	do {
@@ -150,21 +128,21 @@ static void ui_rootmenu() {
 			break;
 		}
 		
-		pressed = ui_getbuttons();
+		pressed = but_getaction();
 		
 		switch(pressed) {
-		case (1<<BUT_LEFT):
+		case (BUT_LEFT):
 			if(choice == 0) {
 				choice = 3;
 			} else {
 				choice--;
 			}
 			break;
-		case (1<<BUT_RIGHT):
+		case (BUT_RIGHT):
 			choice++;
 			if(choice > 3) choice = 0;
 			break;
-		case (1<<BUT_ENTER):
+		case (BUT_ENTER):
 			if(choice == 0) {
 				ui_tonemenu();
 			} else if(choice == 2) {
@@ -173,18 +151,18 @@ static void ui_rootmenu() {
 				ui_brightnessmenu();
 			}
 			break;
-		case (1<<BUT_VOLUP):
+		case (BUT_VOLUP):
 			if(choice == 1) {
 				pre_increasespkbehavior();
 			}
 			break;
-		case (1<<BUT_VOLDN):
+		case (BUT_VOLDN):
 			if(choice == 1) {
 				pre_decreasespkbehavior();
 			}
 		}
 
-	} while(pressed != (1<<BUT_BACK));	// menu stays until user exits
+	} while(pressed != (BUT_BACK));	// menu stays until user exits
 	
 }
 
@@ -193,7 +171,7 @@ static void ui_rootmenu() {
  */
 static void ui_tonemenu() {
 	uint8_t choice = 0;
-	char pressed;
+	enum but_type pressed;
 
 	do {
 		switch(choice) {
@@ -208,21 +186,21 @@ static void ui_tonemenu() {
 			break;
 		}
 		
-		pressed = ui_getbuttons();
+		pressed = but_getaction();
 		
 		switch(pressed) {
-		case (1<<BUT_LEFT):
+		case (BUT_LEFT):
 			if(choice == 0) {
 				choice = 2;
 			} else {
 				choice--;
 			}
 			break;
-		case (1<<BUT_RIGHT):
+		case (BUT_RIGHT):
 			choice++;
 			if(choice > 2) choice = 0;
 			break;
-		case (1<<BUT_VOLUP):
+		case (BUT_VOLUP):
 			if(choice == 0) {
 				pre_increasetonebehavior();
 			} else if(choice == 1) {
@@ -231,7 +209,7 @@ static void ui_tonemenu() {
 				pre_increasetreb();
 			}
 			break;
-		case (1<<BUT_VOLDN):
+		case (BUT_VOLDN):
 			if(choice == 0) {
 				pre_decreasetonebehavior();
 			} else if(choice == 1) {
@@ -242,7 +220,7 @@ static void ui_tonemenu() {
 			break;
 		}
 		
-	} while(pressed != (1<<BUT_BACK));
+	} while(pressed != (BUT_BACK));
 }
 
 /*
@@ -250,7 +228,7 @@ static void ui_tonemenu() {
  */
 static void ui_namemenu() {
 	uint8_t choice = 0;
-	char pressed;
+	enum but_type pressed;
 	char msg[17];
 	char name[17];
 	
@@ -261,26 +239,26 @@ static void ui_namemenu() {
 		strlcat(msg, name, 17);
 		update_display(msg);
 		
-		pressed = ui_getbuttons();
+		pressed = but_getaction();
 		
 		switch(pressed) {
-		case (1<<BUT_LEFT):
+		case (BUT_LEFT):
 			if(choice == 0) {
 				choice = 7;
 			} else {
 				choice--;
 			}
 			break;
-		case (1<<BUT_RIGHT):
+		case (BUT_RIGHT):
 			choice++;
 			if(choice > 7) choice = 0;
 			break;
-		case (1<<BUT_ENTER):
+		case (BUT_ENTER):
 			ui_nameedit(choice);
 			break;
 		}
 		
-	} while(pressed != (1<<BUT_BACK));
+	} while(pressed != (BUT_BACK));
 }
 
 /*
@@ -295,7 +273,7 @@ static void ui_nameedit(uint8_t n_input) {
 	char name[17];						// the name being edited
 	char name_cursor[17];				// the name with blinking cursor overlay
 	char msg[17];						// what is shown on the VFD
-	char pressed;						// button state storage
+	enum but_type pressed;              // button state storage
 	uint8_t cursortime = 0;				// used to time cursor blinks
 	
 	name_get(name, n_input);			// load the old input name
@@ -334,17 +312,17 @@ static void ui_nameedit(uint8_t n_input) {
 			
 			pressed = (~PINC) & BUT_MASK;
 		} while(!pressed);
-		pressed = ui_getbuttons();	// debounce
+		pressed = but_getaction();	// debounce
 		
 		switch(pressed) {
-		case (1<<BUT_LEFT):
+		case (BUT_LEFT):
 			if(edit_pos > 0) {
 				name_cursor[edit_pos] = name[edit_pos];	// clear old cursor
 				edit_pos--;
 			}
 			name_cursor[edit_pos] = 0x7f;
 			break;
-		case (1<<BUT_RIGHT):
+		case (BUT_RIGHT):
 			name_cursor[edit_pos] = name[edit_pos];	// clear old cursor
 			edit_pos++;
 			if(edit_pos > max_edit_pos) {
@@ -352,7 +330,7 @@ static void ui_nameedit(uint8_t n_input) {
 			}
 			name_cursor[edit_pos] = 0x7f;
 			break;
-		case (1<<BUT_VOLUP):
+		case (BUT_VOLUP):
 			name[edit_pos]++;
 
 			if(name[edit_pos] == '!') name[edit_pos] = 'a';
@@ -364,7 +342,7 @@ static void ui_nameedit(uint8_t n_input) {
 			name_cursor[edit_pos] = name[edit_pos];
 
 			break;
-		case (1<<BUT_VOLDN):
+		case (BUT_VOLDN):
 			name[edit_pos]--;
 			
 			if(name[edit_pos] < ' ') name[edit_pos] = ')';
@@ -377,8 +355,7 @@ static void ui_nameedit(uint8_t n_input) {
 			
 			break;
 		}
-	} while(pressed != 1<<BUT_BACK);
-	// TODO: Filter out trailing spaces and save name
+	} while(pressed != BUT_BACK);
 	
 	// filter out trailing spaces
 	lastnonspace = 0;
@@ -395,7 +372,7 @@ static void ui_nameedit(uint8_t n_input) {
  */
 static void ui_brightnessmenu() {
 	uint8_t choice = 0;
-	char pressed;
+	enum but_type pressed;
 	
 	do {
 		switch(choice) {
@@ -407,25 +384,25 @@ static void ui_brightnessmenu() {
 			break;
 		}
 		
-		pressed = ui_getbuttons();
+		pressed = but_getaction();
 		
 		switch(pressed) {
-		case (1<<BUT_LEFT):
-		case (1<<BUT_RIGHT):
+		case (BUT_LEFT):
+		case (BUT_RIGHT):
 			if(choice == 0) {
 				choice = 1;
 			} else {
 				choice = 0;
 			}
 			break;
-		case (1<<BUT_VOLUP):
+		case (BUT_VOLUP):
 			if(choice == 0) {
 				vfd_increaseactivebrightness();
 			} else if(choice == 1) {
 				vfd_increaseidlebrightness();
 			}
 			break;
-		case (1<<BUT_VOLDN):
+		case (BUT_VOLDN):
 			if(choice == 0) {
 				vfd_decreaseactivebrightness();
 			} else if(choice == 1) {
@@ -434,7 +411,7 @@ static void ui_brightnessmenu() {
 			break;
 		}
 		
-	} while(pressed != (1<<BUT_BACK));
+	} while(pressed != (BUT_BACK));
 	
 	vfd_save();		// save brightness
 	
@@ -534,30 +511,30 @@ ISR(PCINT1_vect) {
 	char pressed;
 	char msg[17];	// buffer to reduce flicker while adjusting volume
 	
-	pressed = ui_getbuttons();
+	pressed = but_getaction();
 	
 	vfd_activebrightness();	// set VFD to active brightness
 	
 	switch(pressed) {
-	case (1<<BUT_VOLUP):
+	case (BUT_VOLUP):
 		snprintf_P(msg, 17, LANG_VOLUME, pre_increasevol());
 		update_display(msg);
 		break;
-	case (1<<BUT_VOLDN):
+	case (BUT_VOLDN):
 		snprintf_P(msg, 17, LANG_VOLUME, pre_decreasevol());
 		update_display(msg);
 		break;
-	case (1<<BUT_LEFT):
+	case (BUT_LEFT):
 		pre_previnput();
 		ui_showinput();
 		break;
-	case (1<<BUT_RIGHT):
+	case (BUT_RIGHT):
 		pre_nextinput();
 		ui_showinput();
 		break;
-	case (1<<BUT_ENTER):	// ooh menu time
+	case (BUT_ENTER):	// ooh menu time
 		ui_rootmenu();		// enter the root menu
-	case (1<<BUT_BACK):
+	case (BUT_BACK):
 		ui_showinput();		// go back to regular display after exiting root or hitting back
 	}
 	idle_timeout = UI_HOLD_TIME;
