@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * TODO: remote code
- * Uses TIMER1 for remote pulse capture
+ * Will use TIMER1 for remote pulse capture
  *
  */
  
@@ -28,17 +28,33 @@
 #include "pins.h"
 #include "buttons.h"
 
-static char but_getlocalbutton();
-
 #define DEBOUNCE_TIME 40	// debounce time, in milliseconds
 
+static char but_getlocalbutton();
+
+void butinit() {
+	DDRC &= ~(PINC_BUTMASK);		// make sure all buttons are inputs
+	PORTC |= PINC_BUTMASK;			// inputs with pullups, that is
+}
+
+/*
+ * Waits for local or remote button press and debounces
+ * Returns enum but_type of button pressed
+ */
 enum but_type but_getaction() {
-    //while((PINC & PINC_BUTMASK) == PINC_BUTMASK);  // wait for button press
     return but_getlocalbutton();
 }
 
 /*
- * Waits for a button press, then
+ * Determines whether any buttons, local or remote, have been pressed.
+ * Returns non-zero if any are pressed, zero if none pressed.
+ */
+uint8_t but_ispressed() {
+	return (~PINC) & PINC_BUTMASK;	// only local buttons currently implemented
+}
+
+/*
+ * Waits for a local button press, then
  * saves and debounces button input
  * Returns enum but_type of button pressed
  * Clears PCINT1 caused by button lifting

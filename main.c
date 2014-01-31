@@ -34,7 +34,21 @@
 #include "vfd.h"
 #include "preamp.h"
 #include "ui.h"
-#include "main.h"
+#include "buttons.h"
+
+static void init() {
+	DDRB = 0x00;		// start with non-destructive port settings
+	PORTB = 0xff;		// (input w/ pullup)
+	DDRC = 0x00;
+	PORTC = 0xff;
+	DDRD = 0x00;
+	PORTD = 0xff;
+
+	vfdinit();			// start up VFD
+	preinit();			// start up preamp controls
+	butinit();			// set up button sensing
+	uiinit();			// set up the UI and its interrupts
+}
 
 int main(void) {
 	
@@ -43,18 +57,5 @@ int main(void) {
     while(1) {
 		uiloop();		// note that this puts cpu to sleep when nothing is happening
     }
-}
-
-void init() {
-	DDRB = 0x00;		// start with non-destructive port settings
-	PORTB = 0xff;		// (input w/ pullup)
-	DDRC = 0x00;
-	PORTC = 0xff;
-	DDRD = 0x00;
-	PORTD = 0xff;
-
-	/*stdout = */vfdinit();	// start up VFD
-	preinit();			// start up preamp controls
-	uiinit();			// set up the UI and its interrupts
 }
 

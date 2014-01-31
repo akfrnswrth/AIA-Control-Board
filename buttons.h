@@ -21,6 +21,7 @@
 #define _BUTTONS_H
 
 #include <stdint.h>
+#include "pins.h"
 
 // Note: these numeric definitions are essential to simplify things in buttons.c
 enum but_type {
@@ -33,7 +34,14 @@ enum but_type {
     BUT_NONE    = 0                 // No button press
 };
 
+// sets up inputs (TBI: Timer)
+void butinit();
+
+// Waits for and debounces a press
 enum but_type but_getaction();
+
+// returns nonzero if any buttons are pressed
+uint8_t but_ispressed();
 
 
 #endif

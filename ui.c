@@ -55,9 +55,6 @@ static void ui_showtonetreb();
  * when uiloop is called.
  */
 void uiinit() {
-	DDRC &= ~(PINC_BUTMASK);		// make sure all buttons are inputs
-	PORTC |= PINC_BUTMASK;			// inputs with pullups, that is
-	
 	PCICR |= 1<<PCIE1;				// enable pin-change interrupt
 	PCMSK1 |= PCI1_MASK;			// and enable each button interrupt
 	
@@ -314,9 +311,7 @@ static void ui_nameedit(uint8_t n_input) {
 			name_getprefix(msg, n_input);
 			strcat(msg, name_cursor);
 			update_display(msg);
-			
-			pressed = (~PINC) & PINC_BUTMASK;
-		} while(!pressed);
+		} while(!but_ispressed());
 		pressed = but_getaction();	// debounce
 		
 		switch(pressed) {
