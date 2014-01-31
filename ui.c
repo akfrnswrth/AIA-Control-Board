@@ -36,7 +36,6 @@
 static volatile uint8_t idle_timeout = UI_HOLD_TIME;	// centisecond idle timeout counter
 
 static void ui_idle();
-static char ui_getbuttons();
 static void ui_showinput();
 static void ui_rootmenu();
 static void ui_tonemenu();
@@ -160,6 +159,8 @@ static void ui_rootmenu() {
 			if(choice == 1) {
 				pre_decreasespkbehavior();
 			}
+		default:	// catch other enum values
+			break;
 		}
 
 	} while(pressed != (BUT_BACK));	// menu stays until user exits
@@ -218,6 +219,8 @@ static void ui_tonemenu() {
 				pre_decreasetreb();
 			}
 			break;
+		default:	// catch other enum values
+			break;
 		}
 		
 	} while(pressed != (BUT_BACK));
@@ -255,6 +258,8 @@ static void ui_namemenu() {
 			break;
 		case (BUT_ENTER):
 			ui_nameedit(choice);
+			break;
+		default:	// catch other enum values
 			break;
 		}
 		
@@ -310,7 +315,7 @@ static void ui_nameedit(uint8_t n_input) {
 			strcat(msg, name_cursor);
 			update_display(msg);
 			
-			pressed = (~PINC) & BUT_MASK;
+			pressed = (~PINC) & PINC_BUTMASK;
 		} while(!pressed);
 		pressed = but_getaction();	// debounce
 		
@@ -353,6 +358,8 @@ static void ui_nameedit(uint8_t n_input) {
 			
 			name_cursor[edit_pos] = name[edit_pos];
 			
+			break;
+		default:	// catch other possible enum values
 			break;
 		}
 	} while(pressed != BUT_BACK);
@@ -408,6 +415,8 @@ static void ui_brightnessmenu() {
 			} else if(choice == 1) {
 				vfd_decreaseidlebrightness();
 			}
+			break;
+		default:	// catch other enum values
 			break;
 		}
 		

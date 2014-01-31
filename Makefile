@@ -8,7 +8,7 @@
 MCU = atmega168
 FORMAT = ihex
 TARGET = main
-SRC = $(TARGET).c spi.c vfd.c inputnames.c preamp.c ui.c lang.c
+SRC = $(TARGET).c spi.c vfd.c inputnames.c preamp.c ui.c lang.c buttons.c
 ASRC = 
 OPT = s
 

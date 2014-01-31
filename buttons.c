@@ -28,11 +28,13 @@
 #include "pins.h"
 #include "buttons.h"
 
+static char but_getlocalbutton();
+
 #define DEBOUNCE_TIME 40	// debounce time, in milliseconds
 
 enum but_type but_getaction() {
     //while((PINC & PINC_BUTMASK) == PINC_BUTMASK);  // wait for button press
-    return but_getlocalbutton;
+    return but_getlocalbutton();
 }
 
 /*
@@ -48,7 +50,7 @@ static char but_getlocalbutton() {
 	
 	// wait for continuous DEBOUNCE_TIME ms of all buttons open
 	for(uint8_t timeleft = DEBOUNCE_TIME; timeleft > 0; timeleft--) {
-		if((PINC & BUT_MASK) != BUT_MASK) timeleft = DEBOUNCE_TIME;
+		if((PINC & PINC_BUTMASK) != PINC_BUTMASK) timeleft = DEBOUNCE_TIME;
 		_delay_ms(1);
 	}
 	PCIFR = 1<<PCIF1;	// clear PCINT1 caused by switch lifting
