@@ -31,11 +31,14 @@ enum but_type {
     BUT_VOLDN   = (1<<PINC_VOLDN),  // Volume down/- button
     BUT_LEFT    = (1<<PINC_LEFT),   // Select left button
     BUT_RIGHT   = (1<<PINC_RIGHT),  // Select right button
-    BUT_NONE    = 0                 // No button press
+    BUT_NONE    = 0                  // No button press
 };
 
 // sets up inputs (TBI: Timer)
 void butinit();
+
+// tie a function to the button interrupts
+void but_setint(void (*f)());
 
 // Waits for and debounces a press
 enum but_type but_getaction();

@@ -37,6 +37,7 @@ static volatile uint8_t idle_timeout = UI_HOLD_TIME;	// centisecond idle timeout
 
 static void ui_idle();
 static void ui_showinput();
+static void ui_buttonISR();
 static void ui_rootmenu();
 static void ui_tonemenu();
 static void ui_namemenu();
@@ -55,8 +56,7 @@ static void ui_showtonetreb();
  * when uiloop is called.
  */
 void uiinit() {
-	PCICR |= 1<<PCIE1;				// enable pin-change interrupt
-	PCMSK1 |= PCI1_MASK;			// and enable each button interrupt
+	but_setint(ui_buttonISR);
 	
 	set_sleep_mode(SLEEP_MODE_IDLE);// set IDLE as the sleep mode
 	
@@ -508,10 +508,10 @@ static void ui_showidlebrightness() {
 }
 
 /*
- * Triggered when logic level changes on a button pin
+ * Triggered when a button is pressed
  * Volume and input adjust, root menu entry point
  */
-ISR(PCINT1_vect) { 
+static void ui_buttonISR() { 
 	char pressed;
 	char msg[17];	// buffer to reduce flicker while adjusting volume
 	

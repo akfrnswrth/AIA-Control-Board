@@ -17,12 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * TODO: remote code
- * Will use TIMER1 for remote pulse capture
+ * Uses ISR(PCINT1_vect) for local and Timer1 for remote
  *
  */
  
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <stdint.h>
 #include <util/delay.h>
 #include "pins.h"
@@ -32,9 +33,19 @@
 
 static char but_getlocalbutton();
 
+static void (*but_intfunc)() = 0;// pointer to the set interrupt function
+
 void butinit() {
 	DDRC &= ~(PINC_BUTMASK);		// make sure all buttons are inputs
 	PORTC |= PINC_BUTMASK;			// inputs with pullups, that is
+}
+
+void but_setint(void (*f)()) {
+	PCICR |= 1<<PCIE1;				// enable pin-change interrupt
+	PCMSK1 |= PCI1_MASK;			// and enable each button interrupt
+	// TODO: Remote control interrupts
+	
+	but_intfunc = f;
 }
 
 /*
@@ -72,4 +83,9 @@ static char but_getlocalbutton() {
 	PCIFR = 1<<PCIF1;	// clear PCINT1 caused by switch lifting
 	
 	return pressedbyte;
+}
+
+ISR(PCINT1_vect) {
+	// only run but_intfunc() if it has been set!
+	if(but_intfunc) but_intfunc();
 }
