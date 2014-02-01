@@ -37,7 +37,7 @@
 #include "vfd.h"
 
 #define DEBOUNCE_TIME 40	// debounce time, in milliseconds
-#define REM_TIMEOUT 40		// max time between remote packets, in milliseconds
+#define REM_TIMEOUT 40000U	// max time between remote packets, in milliseconds
 #define REM_ADDRESS 1		// device address to listen for
 
 
@@ -133,7 +133,8 @@ static char but_getlocalbutton() {
 /* Waits for a remote button press, then waits for button to be released.
  * Returns enum but_type of button pressed.
  * Clears TIMER1_CAPT_vect caused by button lifting.
- * Invalid codes return BUT_NONE. This needs to be changed.
+ * Invalid signals may make this hang. This NEEDS TO BE FIXED.
+ * Possible idea: monitor TCNT1 in all while loops to create a timeout
  */
 static enum but_type but_getremotebutton() {
 	uint16_t packet, starttime, endtime, pulselength;
@@ -147,11 +148,11 @@ static enum but_type but_getremotebutton() {
 			if(PINB & 1<<REM_RX) {			// pulse hasn't started
 				TCCR1B &= ~(1<<ICES1);		// set capture on falling edge (pulse start)
 				TIFR1 = 1<<ICF1;			// clear any capture flag
-				while(!(TIFR1 & (1<<ICF1)));// wait for capture
+				while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
 				starttime = ICR1;			// save start timestamp
 				TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
 				TIFR1 = 1<<ICF1;			// clear capture flag
-				while(!(TIFR1 & (1<<ICF1)));// wait for capture
+				while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
 				endtime = ICR1;				// save end timestamp
 				TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
 				TIFR1 = 1<<ICF1;			// clear capture flag
@@ -159,11 +160,12 @@ static enum but_type but_getremotebutton() {
 				starttime = ICR1;			// get the start time ASAP
 				TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
 				TIFR1 = 1<<ICF1;			// clear capture flag
-				while(!(TIFR1 & (1<<ICF1)));// wait for capture
+				while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
 				endtime = ICR1;				// save end timestamp
 				TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
 				TIFR1 = 1<<ICF1;			// clear capture flag
 			}
+			
 			pulselength = endtime - starttime;
 		} while (pulselength < 2100 || pulselength > 2700);
 		
@@ -173,14 +175,15 @@ static enum but_type but_getremotebutton() {
 		while (good && bit < 12) {
 			TCCR1B &= ~(1<<ICES1);		// set capture on falling edge (pulse start)
 			TIFR1 = 1<<ICF1;			// clear any capture flag
-			while(!(TIFR1 & (1<<ICF1)));// wait for capture
+			while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
 			starttime = ICR1;			// save start timestamp
 			TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
 			TIFR1 = 1<<ICF1;			// clear capture flag
-			while(!(TIFR1 & (1<<ICF1)));// wait for capture
+			while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
 			endtime = ICR1;				// save end timestamp
 			TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
 			TIFR1 = 1<<ICF1;			// clear capture flag
+			
 			pulselength = endtime - starttime;
 		
 			if(pulselength < 450) {		// too short
@@ -203,14 +206,12 @@ static enum but_type but_getremotebutton() {
 	
 	data = packet & 0x7f;	// data is in lower 7 bits
 	
-	// reusing pulselength to determine when button is lifted
-	// for some reason, monitoring TCNT1 and ICR1 doesn't work
-	pulselength = 0;
+	// for some reason, comparing TCNT1 and ICR1 doesn't work
+	TCNT1 = 0;
 	do {
-		if((~PINB) & 1<<REM_RX) pulselength = 0;
-		_delay_ms(1);
-		pulselength++;
-	} while(pulselength < REM_TIMEOUT);
+		if((~PINB) & 1<<REM_RX) TCNT1 = 0;
+	} while(TCNT1 < REM_TIMEOUT);
+	TIFR1 = 1<<ICF1;			// clear capture flag
 	
 	switch(data) {
 	case 0x60:
@@ -219,19 +220,23 @@ static enum but_type but_getremotebutton() {
 	case 0x63:
 		return BUT_BACK;
 	case 0x12:
-	case 0x74:
-		return BUT_VOLUP;
+		return BUT_VOLINC;
 	case 0x13:
-	case 0x75:
-		return BUT_VOLDN;
-	case 0x33:
+		return BUT_VOLDEC;
 	case 0x10:
-		return BUT_RIGHT;
-	case 0x34:
+		return BUT_SELDNR;
 	case 0x11:
-		return BUT_LEFT;
+		return BUT_SELUPL;
+	case 0x74:
+		return BUT_DIRUP;
+	case 0x75:
+		return BUT_DIRDN;
+	case 0x34:
+		return BUT_DIRLEFT;
+	case 0x33:
+		return BUT_DIRRIGHT;
 	default:
-		snprintf_P(msg, 17, PSTR("E: Code 0x%02x"), data);
+		snprintf_P(msg, 17, PSTR("E: Remote 0x%02x"), data);
 		update_display(msg);
 		_delay_ms(250);
 		return BUT_NONE;

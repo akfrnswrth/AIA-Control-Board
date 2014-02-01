@@ -124,21 +124,25 @@ static void ui_rootmenu() {
 			break;
 		}
 		
-		pressed = but_getaction();
+		do {
+			pressed = but_getaction();
+		} while(pressed == BUT_NONE);
 		
 		switch(pressed) {
-		case (BUT_LEFT):
+		case BUT_SELUPL:
+		case BUT_DIRUP:
 			if(choice == 0) {
 				choice = 3;
 			} else {
 				choice--;
 			}
 			break;
-		case (BUT_RIGHT):
+		case BUT_SELDNR:
+		case BUT_DIRDN:
 			choice++;
 			if(choice > 3) choice = 0;
 			break;
-		case (BUT_ENTER):
+		case BUT_ENTER:
 			if(choice == 0) {
 				ui_tonemenu();
 			} else if(choice == 2) {
@@ -147,12 +151,14 @@ static void ui_rootmenu() {
 				ui_brightnessmenu();
 			}
 			break;
-		case (BUT_VOLUP):
+		case BUT_VOLINC:
+		case BUT_DIRRIGHT:
 			if(choice == 1) {
 				pre_increasespkbehavior();
 			}
 			break;
-		case (BUT_VOLDN):
+		case BUT_VOLDEC:
+		case BUT_DIRLEFT:
 			if(choice == 1) {
 				pre_decreasespkbehavior();
 			}
@@ -184,21 +190,26 @@ static void ui_tonemenu() {
 			break;
 		}
 		
-		pressed = but_getaction();
+		do {
+			pressed = but_getaction();
+		} while(pressed == BUT_NONE);
 		
 		switch(pressed) {
-		case (BUT_LEFT):
+		case BUT_SELUPL:
+		case BUT_DIRUP:
 			if(choice == 0) {
 				choice = 2;
 			} else {
 				choice--;
 			}
 			break;
-		case (BUT_RIGHT):
+		case BUT_SELDNR:
+		case BUT_DIRDN:
 			choice++;
 			if(choice > 2) choice = 0;
 			break;
-		case (BUT_VOLUP):
+		case BUT_VOLINC:
+		case BUT_DIRRIGHT:
 			if(choice == 0) {
 				pre_increasetonebehavior();
 			} else if(choice == 1) {
@@ -207,7 +218,8 @@ static void ui_tonemenu() {
 				pre_increasetreb();
 			}
 			break;
-		case (BUT_VOLDN):
+		case BUT_VOLDEC:
+		case BUT_DIRLEFT:
 			if(choice == 0) {
 				pre_decreasetonebehavior();
 			} else if(choice == 1) {
@@ -239,21 +251,25 @@ static void ui_namemenu() {
 		strlcat(msg, name, 17);
 		update_display(msg);
 		
-		pressed = but_getaction();
+		do {
+			pressed = but_getaction();
+		} while(pressed == BUT_NONE);
 		
 		switch(pressed) {
-		case (BUT_LEFT):
+		case BUT_SELUPL:
+		case BUT_DIRUP:
 			if(choice == 0) {
 				choice = 7;
 			} else {
 				choice--;
 			}
 			break;
-		case (BUT_RIGHT):
+		case BUT_SELDNR:
+		case BUT_DIRDN:
 			choice++;
 			if(choice > 7) choice = 0;
 			break;
-		case (BUT_ENTER):
+		case BUT_ENTER:
 			ui_nameedit(choice);
 			break;
 		default:	// catch other enum values
@@ -312,17 +328,20 @@ static void ui_nameedit(uint8_t n_input) {
 			strcat(msg, name_cursor);
 			update_display(msg);
 		} while(!but_ispressed());
+		
 		pressed = but_getaction();	// debounce
 		
 		switch(pressed) {
-		case (BUT_LEFT):
+		case BUT_SELUPL:
+		case BUT_DIRLEFT:
 			if(edit_pos > 0) {
 				name_cursor[edit_pos] = name[edit_pos];	// clear old cursor
 				edit_pos--;
 			}
 			name_cursor[edit_pos] = 0x7f;
 			break;
-		case (BUT_RIGHT):
+		case BUT_SELDNR:
+		case BUT_DIRRIGHT:
 			name_cursor[edit_pos] = name[edit_pos];	// clear old cursor
 			edit_pos++;
 			if(edit_pos > max_edit_pos) {
@@ -330,7 +349,8 @@ static void ui_nameedit(uint8_t n_input) {
 			}
 			name_cursor[edit_pos] = 0x7f;
 			break;
-		case (BUT_VOLUP):
+		case BUT_VOLINC:
+		case BUT_DIRUP:
 			name[edit_pos]++;
 
 			if(name[edit_pos] == '!') name[edit_pos] = 'a';
@@ -342,7 +362,8 @@ static void ui_nameedit(uint8_t n_input) {
 			name_cursor[edit_pos] = name[edit_pos];
 
 			break;
-		case (BUT_VOLDN):
+		case BUT_VOLDEC:
+		case BUT_DIRDN:
 			name[edit_pos]--;
 			
 			if(name[edit_pos] < ' ') name[edit_pos] = ')';
@@ -354,7 +375,7 @@ static void ui_nameedit(uint8_t n_input) {
 			name_cursor[edit_pos] = name[edit_pos];
 			
 			break;
-		default:	// catch other possible enum values
+		default:		// catch other enum values
 			break;
 		}
 	} while(pressed != BUT_BACK);
@@ -386,25 +407,31 @@ static void ui_brightnessmenu() {
 			break;
 		}
 		
-		pressed = but_getaction();
+		do {
+			pressed = but_getaction();
+		} while(pressed == BUT_NONE);
 		
 		switch(pressed) {
-		case (BUT_LEFT):
-		case (BUT_RIGHT):
+		case BUT_SELUPL:
+		case BUT_SELDNR:
+		case BUT_DIRUP:
+		case BUT_DIRDN:
 			if(choice == 0) {
 				choice = 1;
 			} else {
 				choice = 0;
 			}
 			break;
-		case (BUT_VOLUP):
+		case BUT_VOLINC:
+		case BUT_DIRRIGHT:
 			if(choice == 0) {
 				vfd_increaseactivebrightness();
 			} else if(choice == 1) {
 				vfd_increaseidlebrightness();
 			}
 			break;
-		case (BUT_VOLDN):
+		case BUT_VOLDEC:
+		case BUT_DIRLEFT:
 			if(choice == 0) {
 				vfd_decreaseactivebrightness();
 			} else if(choice == 1) {
@@ -520,26 +547,36 @@ static void ui_buttonISR() {
 	vfd_activebrightness();	// set VFD to active brightness
 	
 	switch(pressed) {
-	case (BUT_VOLUP):
+	case BUT_VOLINC:
+	case BUT_DIRRIGHT:
 		snprintf_P(msg, 17, LANG_VOLUME, pre_increasevol());
 		update_display(msg);
 		break;
-	case (BUT_VOLDN):
+	case BUT_VOLDEC:
+	case BUT_DIRLEFT:
 		snprintf_P(msg, 17, LANG_VOLUME, pre_decreasevol());
 		update_display(msg);
 		break;
-	case (BUT_LEFT):
+	case BUT_DIRUP:
+	case BUT_SELUPL:
 		pre_previnput();
 		ui_showinput();
 		break;
-	case (BUT_RIGHT):
+	case BUT_DIRDN:
+	case BUT_SELDNR:
 		pre_nextinput();
 		ui_showinput();
 		break;
-	case (BUT_ENTER):	// ooh menu time
+	case BUT_NONE:
+		vfd_idlebrightness();
+		ui_showinput();
+		break;
+	case BUT_ENTER:
 		ui_rootmenu();		// enter the root menu
+		// INTENTIONALLY NO BREAK STATEMENT
 	default:
-		ui_showinput();		// go back to regular display after exiting root or hitting back
+		ui_showinput();		// go back to regular display
+		break;
 	}
 	idle_timeout = UI_HOLD_TIME;
 }

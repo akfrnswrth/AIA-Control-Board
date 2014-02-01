@@ -27,11 +27,15 @@
 enum but_type {
     BUT_ENTER   = (1<<PINC_ENTER),  // Enter button
     BUT_BACK    = (1<<PINC_BACK),   // Back button
-    BUT_VOLUP   = (1<<PINC_VOLUP),  // Volume up/+ button
-    BUT_VOLDN   = (1<<PINC_VOLDN),  // Volume down/- button
-    BUT_LEFT    = (1<<PINC_LEFT),   // Select left button
-    BUT_RIGHT   = (1<<PINC_RIGHT),  // Select right button
-    BUT_NONE    = 0                  // No button press
+    BUT_VOLINC  = (1<<PINC_VOLUP),  // Volume increment button
+    BUT_VOLDEC  = (1<<PINC_VOLDN),  // Volume decrement button
+    BUT_SELUPL  = (1<<PINC_LEFT),   // Select left/up button
+    BUT_SELDNR  = (1<<PINC_RIGHT),  // Select right/down button
+	BUT_DIRLEFT,					 // Directional left button (remote only)
+	BUT_DIRRIGHT,					 // Directional right button (remote only)
+	BUT_DIRUP,						 // Directional up button (remote only)
+	BUT_DIRDN,						 // Directional down button (remote only)
+    BUT_NONE    = 0                  // No or invalid button press
 };
 
 // sets up inputs (TBI: Timer)
