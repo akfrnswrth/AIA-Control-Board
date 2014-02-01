@@ -103,10 +103,15 @@ static uint8_t but_islocalpressed() {
 
 /*
  * Determines whether a remote button is pressed.
- * Misses presses often since this code doesn't check ICR1.
  */
 static uint8_t but_isremotepressed() {
-	return (~PINB) & 1<<REM_RX;
+	// check for recent unhandled capture
+	if((TIFR1 & (1<<ICF1)) && (TCNT1 - ICR1 < REM_TIMEOUT)) {
+		TIFR1 = 1<<ICF1;	// clear flag
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 /*
@@ -131,13 +136,16 @@ static char but_getlocalbutton() {
 } 
 
 /* Waits for a remote button press, then waits for button to be released.
- * Returns enum but_type of button pressed.
+ * Returns enum but_type of button pressed.  Returns BUT_NONE if no packets
+ * received within REM_TIMEOUT.
+ *
  * Clears TIMER1_CAPT_vect caused by button lifting.
+ *
  * Invalid signals may make this hang. This NEEDS TO BE FIXED.
  * Possible idea: monitor TCNT1 in all while loops to create a timeout
  */
 static enum but_type but_getremotebutton() {
-	uint16_t packet, starttime, endtime, pulselength;
+	uint16_t packet, pulsestart, pulseend, pulselength, listenstart;
 	uint8_t good, bit, data, address;
 	
 	char msg[17];
@@ -148,44 +156,60 @@ static enum but_type but_getremotebutton() {
 			if(PINB & 1<<REM_RX) {			// pulse hasn't started
 				TCCR1B &= ~(1<<ICES1);		// set capture on falling edge (pulse start)
 				TIFR1 = 1<<ICF1;			// clear any capture flag
-				while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
-				starttime = ICR1;			// save start timestamp
+				listenstart = TCNT1;		// save listen start time
+				while((!(TIFR1 & (1<<ICF1)))) {// wait for capture or listen timeout
+					if(TCNT1 - listenstart > REM_TIMEOUT) {
+						return BUT_NONE;
+					}
+				}
+				pulsestart = ICR1;			// save start timestamp
 				TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
 				TIFR1 = 1<<ICF1;			// clear capture flag
-				while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
-				endtime = ICR1;				// save end timestamp
+				while((!(TIFR1 & (1<<ICF1))));// wait for capture
+				pulseend = ICR1;				// save end timestamp
 				TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
 				TIFR1 = 1<<ICF1;			// clear capture flag
 			} else {						// pulse in progress
-				starttime = ICR1;			// get the start time ASAP
+				pulsestart = ICR1;			// get the start time ASAP
 				TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
 				TIFR1 = 1<<ICF1;			// clear capture flag
-				while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
-				endtime = ICR1;				// save end timestamp
+				while((!(TIFR1 & (1<<ICF1))));// wait for capture
+				pulseend = ICR1;				// save end timestamp
 				TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
 				TIFR1 = 1<<ICF1;			// clear capture flag
 			}
 			
-			pulselength = endtime - starttime;
+			pulselength = pulseend - pulsestart;
+			
 		} while (pulselength < 2100 || pulselength > 2700);
 		
 		good = 1;
 		packet = bit = 0;
 		
+		// get 12-bit data packet
 		while (good && bit < 12) {
+			// look for pulse start
 			TCCR1B &= ~(1<<ICES1);		// set capture on falling edge (pulse start)
 			TIFR1 = 1<<ICF1;			// clear any capture flag
-			while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
-			starttime = ICR1;			// save start timestamp
+			listenstart = TCNT1;		// save listen start time
+			while((!(TIFR1 & (1<<ICF1)))) {// wait for capture or timeout
+				if(TCNT1 - listenstart > REM_TIMEOUT) {
+					return BUT_NONE;
+				}
+			}
+			pulsestart = ICR1;			// save start timestamp
+			
+			// look for pulse end
 			TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
 			TIFR1 = 1<<ICF1;			// clear capture flag
-			while((!(TIFR1 & (1<<ICF1))));// wait for capture or local press
-			endtime = ICR1;				// save end timestamp
+			while((!(TIFR1 & (1<<ICF1))));// wait for capture or timeout
+			pulseend = ICR1;				// save end timestamp
 			TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
 			TIFR1 = 1<<ICF1;			// clear capture flag
 			
-			pulselength = endtime - starttime;
+			pulselength = pulseend - pulsestart;
 		
+			// interpret pulse
 			if(pulselength < 450) {		// too short
 				good = packet = 0;		// reset receive
 			} else if (pulselength < 750) { // data zero
@@ -198,21 +222,23 @@ static enum but_type but_getremotebutton() {
 			}
 		}
 		
+		// check for correct address
 		address = packet >> 7;			// address is in high 5 bits
 		if(address != REM_ADDRESS) {	// throw out wrong-address packets
 			good = 0;
 		}
 	}
 	
-	data = packet & 0x7f;	// data is in lower 7 bits
+	data = packet & 0x7f;	// get data from lower 7 bits
 	
-	// for some reason, comparing TCNT1 and ICR1 doesn't work
+	// wait for button to be lifted
 	TCNT1 = 0;
 	do {
 		if((~PINB) & 1<<REM_RX) TCNT1 = 0;
 	} while(TCNT1 < REM_TIMEOUT);
 	TIFR1 = 1<<ICF1;			// clear capture flag
 	
+	// interpret data
 	switch(data) {
 	case 0x60:
 	case 0x65:

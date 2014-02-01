@@ -68,13 +68,15 @@ void uiinit() {
  */
 void uiloop() {
 	cli();							// block interrupts from messing with idle_timeout access
-	while(idle_timeout > 0) {		// delay ui_idle until timeout expires to avoid excessive EEPROM writes
-		idle_timeout--;
-		sei();						// make sure interrupts work while waiting
-		_delay_ms(100);
-		cli();
+	if(idle_timeout > 0) {			// block EEPROM writes from BUT_NONE
+		while(idle_timeout > 0) {		// delay ui_idle until timeout expires to avoid excessive EEPROM writes
+			idle_timeout--;
+			sei();						// make sure interrupts work while waiting
+			_delay_ms(100);
+			cli();
+		}
+		ui_idle();						// run idle tasks (show input, save settings to EEPROM)
 	}
-	ui_idle();						// run idle tasks (show input, save settings to EEPROM)
 	sleep_enable();
 	sei();
 	sleep_cpu();
@@ -544,39 +546,37 @@ static void ui_buttonISR() {
 	
 	pressed = but_getaction();
 	
-	vfd_activebrightness();	// set VFD to active brightness
-	
-	switch(pressed) {
-	case BUT_VOLINC:
-	case BUT_DIRRIGHT:
-		snprintf_P(msg, 17, LANG_VOLUME, pre_increasevol());
-		update_display(msg);
-		break;
-	case BUT_VOLDEC:
-	case BUT_DIRLEFT:
-		snprintf_P(msg, 17, LANG_VOLUME, pre_decreasevol());
-		update_display(msg);
-		break;
-	case BUT_DIRUP:
-	case BUT_SELUPL:
-		pre_previnput();
-		ui_showinput();
-		break;
-	case BUT_DIRDN:
-	case BUT_SELDNR:
-		pre_nextinput();
-		ui_showinput();
-		break;
-	case BUT_NONE:
-		vfd_idlebrightness();
-		ui_showinput();
-		break;
-	case BUT_ENTER:
-		ui_rootmenu();		// enter the root menu
-		// INTENTIONALLY NO BREAK STATEMENT
-	default:
-		ui_showinput();		// go back to regular display
-		break;
+	if(pressed != BUT_NONE) {
+		vfd_activebrightness();	// set VFD to active brightness
+		
+		switch(pressed) {
+		case BUT_VOLINC:
+		case BUT_DIRRIGHT:
+			snprintf_P(msg, 17, LANG_VOLUME, pre_increasevol());
+			update_display(msg);
+			break;
+		case BUT_VOLDEC:
+		case BUT_DIRLEFT:
+			snprintf_P(msg, 17, LANG_VOLUME, pre_decreasevol());
+			update_display(msg);
+			break;
+		case BUT_DIRUP:
+		case BUT_SELUPL:
+			pre_previnput();
+			ui_showinput();
+			break;
+		case BUT_DIRDN:
+		case BUT_SELDNR:
+			pre_nextinput();
+			ui_showinput();
+			break;
+		case BUT_ENTER:
+			ui_rootmenu();		// enter the root menu
+			// INTENTIONALLY NO BREAK STATEMENT
+		default:
+			ui_showinput();		// go back to regular display
+			break;
+		}
+		idle_timeout = UI_HOLD_TIME;
 	}
-	idle_timeout = UI_HOLD_TIME;
 }
