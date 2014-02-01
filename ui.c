@@ -87,7 +87,6 @@ void uiloop() {
 static void ui_showinput() {
 	char msg[17];
 	name_get(msg, pre_getcurrentinput());
-	//snprintf(msg, 17, "TCNT=%hu", TCNT1);
 	center_display(msg);
 }
 

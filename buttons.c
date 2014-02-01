@@ -15,9 +15,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * Designed to work with 12-bit Sony IR protocol. No guarantees.
+ * Designed to work with the Sony IR protocol. No guarantees.
  *
- * TODO: remote code
  * TODO: increase compatibility with other clock frequencies
  * Uses ISR(PCINT1_vect) for local and Timer1 for remote
  * Needs F_CPU to be 1000000 Hz.
@@ -38,7 +37,7 @@
 #include "vfd.h"
 
 #define DEBOUNCE_TIME 40	// debounce time, in milliseconds
-#define REM_TIMEOUT 60000U	// max time between remote packets, in microseconds
+#define REM_TIMEOUT 40		// max time between remote packets, in milliseconds
 #define REM_ADDRESS 1		// device address to listen for
 
 
@@ -131,61 +130,47 @@ static char but_getlocalbutton() {
 	return pressedbyte;
 } 
 
-static char findts(uint16_t time) {
-	time /= 200;
-	switch(time) {
-	case 0:
-		return '0';
-	case 1:
-		return '1';
-	case 2:
-		return '2';
-	case 3:
-		return '3';
-	case 4:
-		return '4';
-	case 5:
-		return '5';
-	case 6:
-		return '6';
-	case 7:
-		return '7';
-	case 8:
-		return '8';
-	case 9:
-		return '9';
-	case 10:
-		return 'A';
-	case 11:
-		return 'B';
-	case 12:
-		return 'C';
-	case 13:
-		return 'D';
-	case 14:
-		return 'E';
-	case 15:
-		return 'F';
-	default:
-		return 'x';
-	}
-}
-
 /* Waits for a remote button press, then waits for button to be released.
  * Returns enum but_type of button pressed.
  * Clears TIMER1_CAPT_vect caused by button lifting.
  * Invalid codes return BUT_NONE. This needs to be changed.
  */
 static enum but_type but_getremotebutton() {
-	uint16_t starttime, endtime, pulselength, data;
-	uint8_t command, address;
+	uint16_t packet, starttime, endtime, pulselength;
+	uint8_t good, bit, data, address;
 	
-	char msg[17];	// used for debugging
+	char msg[17];
 	
-	/*
-	// look for start pulse 
-	do {
-		if((~PINB) & 1<<REM_RX) {		// pulse hasn't started
+	good = 0;
+	while(!good) {
+		do {
+			if(PINB & 1<<REM_RX) {			// pulse hasn't started
+				TCCR1B &= ~(1<<ICES1);		// set capture on falling edge (pulse start)
+				TIFR1 = 1<<ICF1;			// clear any capture flag
+				while(!(TIFR1 & (1<<ICF1)));// wait for capture
+				starttime = ICR1;			// save start timestamp
+				TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
+				TIFR1 = 1<<ICF1;			// clear capture flag
+				while(!(TIFR1 & (1<<ICF1)));// wait for capture
+				endtime = ICR1;				// save end timestamp
+				TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
+				TIFR1 = 1<<ICF1;			// clear capture flag
+			} else {						// pulse in progress
+				starttime = ICR1;			// get the start time ASAP
+				TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
+				TIFR1 = 1<<ICF1;			// clear capture flag
+				while(!(TIFR1 & (1<<ICF1)));// wait for capture
+				endtime = ICR1;				// save end timestamp
+				TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
+				TIFR1 = 1<<ICF1;			// clear capture flag
+			}
+			pulselength = endtime - starttime;
+		} while (pulselength < 2100 || pulselength > 2700);
+		
+		good = 1;
+		packet = bit = 0;
+		
+		while (good && bit < 12) {
 			TCCR1B &= ~(1<<ICES1);		// set capture on falling edge (pulse start)
 			TIFR1 = 1<<ICF1;			// clear any capture flag
 			while(!(TIFR1 & (1<<ICF1)));// wait for capture
@@ -196,103 +181,61 @@ static enum but_type but_getremotebutton() {
 			endtime = ICR1;				// save end timestamp
 			TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
 			TIFR1 = 1<<ICF1;			// clear capture flag
-		} else {						// pulse in progress
-			starttime = ICR1;			// get the start time ASAP
-			TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
-			TIFR1 = 1<<ICF1;			// clear capture flag
-			while(!(TIFR1 & (1<<ICF1)));// wait for capture
-			endtime = ICR1;				// save end timestamp
-			TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
-			TIFR1 = 1<<ICF1;			// clear capture flag
-		}
-		pulselength = endtime - starttime;
-		vfd_clear();
-		vfd_putchar(findts(pulselength));
-	} while(pulselength > 2700 || pulselength < 2100);	// look for 2400 us pulse
-	//snprintf(msg, 17, "p=%hu", pulselength);
-	//		update_display(msg);
-	
-	// read in 12-bit data packet
-	data = 0;
-	for(uint8_t bit = 0; bit < 15; bit++) {
-		//_delay_us(450);				// block pulses that are too close together
+			pulselength = endtime - starttime;
 		
-		TCCR1B &= ~(1<<ICES1);		// set capture on falling edge (pulse start)
-		TIFR1 = 1<<ICF1;			// clear any capture flag
-		while(!(TIFR1 & (1<<ICF1)));// wait for capture
-		starttime = ICR1;			// save start timestamp
-		TCCR1B |= 1<<ICES1;			// set capture on rising edge (pulse end)
-		TIFR1 = 1<<ICF1;			// clear capture flag
-		while(!(TIFR1 & (1<<ICF1)));// wait for capture
-		endtime = ICR1;				// save end timestamp
-		TCCR1B &= ~(1<<ICES1);		// set capture back to falling edge
-		TIFR1 = 1<<ICF1;			// clear capture flag
-		pulselength = endtime - starttime;
-		
-		vfd_putchar(findts(pulselength));
-		//snprintf(msg, 17, "p=%hu", pulselength);
-		//update_display(msg);
-		
-		
-		if(pulselength < 450) {		// bad pulse
-			snprintf(msg, 17, "p=%hu b=%hhu", pulselength, bit);
-			update_display(msg);
-			//_delay_ms(250);
-			return BUT_NONE;
-		} else if(pulselength < 900) {// data zero
-			//data |= 1<<bit;
-		} else if(pulselength < 2400) {// data one
-			data |= 1<<bit;
-		} else {
-			snprintf(msg, 17, "p=%hu b=%hhu", pulselength, bit);
-			update_display(msg);
-			//_delay_ms(250);
-			return BUT_NONE;		// bad pulse
+			if(pulselength < 450) {		// too short
+				good = packet = 0;		// reset receive
+			} else if (pulselength < 750) { // data zero
+				bit++;
+			} else if (pulselength < 900) { // bad data
+				good = packet = 0;		// reset receive
+			} else if (pulselength < 1500) {// data one
+				packet |= 1<<bit;
+				bit++;
+			}
 		}
 		
-		
-	} */
-	
-	// extract command and address from data packet
-	//command = data & 0x7f;			// low 7 bits are command
-	//address = data>>7;				// high 5 are address
-	
-	uint16_t t = 0;
-	do {
-		t++;
-		TIFR1 = 1<<ICF1;
-		_delay_ms(1);
-		if(TIFR1 & (1<<ICF1)) t = 0;
-	} while(t < 60);
-	
-	snprintf(msg, 17, "Code %x");
-	update_display(msg);
-	
-	/*
-	if(address != REM_ADDRESS) {	// throw out presses to the wrong address
-		return BUT_NONE;
+		address = packet >> 7;			// address is in high 5 bits
+		if(address != REM_ADDRESS) {	// throw out wrong-address packets
+			good = 0;
+		}
 	}
 	
-	switch(command) {				// translate command to button
-	case 0:							// FIXME: correct ENTER and BACK
+	data = packet & 0x7f;	// data is in lower 7 bits
+	
+	// reusing pulselength to determine when button is lifted
+	// for some reason, monitoring TCNT1 and ICR1 doesn't work
+	pulselength = 0;
+	do {
+		if((~PINB) & 1<<REM_RX) pulselength = 0;
+		_delay_ms(1);
+		pulseleng th++;
+	} while(pulselength < REM_TIMEOUT);
+	
+	switch(data) {
+	case 0x60:
+	case 0x65:
 		return BUT_ENTER;
-	case 1:
+	case 0x63:
 		return BUT_BACK;
-	case 18:
+	case 0x12:
+	case 0x74:
 		return BUT_VOLUP;
-	case 19:
+	case 0x13:
+	case 0x75:
 		return BUT_VOLDN;
-	case 16:
-		return BUT_LEFT;
-	case 17:
+	case 0x33:
+	case 0x10:
 		return BUT_RIGHT;
-	default:	// for debugging
-		snprintf(msg, 17, "CODE: %hhu", command);
+	case 0x34:
+	case 0x11:
+		return BUT_LEFT;
+	default:
+		snprintf_P(msg, 17, PSTR("E: Code 0x%02x"), data);
 		update_display(msg);
 		_delay_ms(250);
 		return BUT_NONE;
-	}*/
-	return BUT_NONE;
+	}
 }
 
 ISR(PCINT1_vect) {
