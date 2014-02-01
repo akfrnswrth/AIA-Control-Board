@@ -87,6 +87,7 @@ void uiloop() {
 static void ui_showinput() {
 	char msg[17];
 	name_get(msg, pre_getcurrentinput());
+	//snprintf(msg, 17, "TCNT=%hu", TCNT1);
 	center_display(msg);
 }
 
@@ -512,7 +513,7 @@ static void ui_showidlebrightness() {
  * Volume and input adjust, root menu entry point
  */
 static void ui_buttonISR() { 
-	char pressed;
+	enum but_type pressed;
 	char msg[17];	// buffer to reduce flicker while adjusting volume
 	
 	pressed = but_getaction();
@@ -538,7 +539,7 @@ static void ui_buttonISR() {
 		break;
 	case (BUT_ENTER):	// ooh menu time
 		ui_rootmenu();		// enter the root menu
-	case (BUT_BACK):
+	default:
 		ui_showinput();		// go back to regular display after exiting root or hitting back
 	}
 	idle_timeout = UI_HOLD_TIME;
