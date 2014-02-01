@@ -1,5 +1,4 @@
-/*
- * buttons.c - Handle button presses both local and remote 
+/* buttons.c - Handle button presses both local and remote 
  * Copyright (C) 2014 Ali Kocaturk <akfrnswrth@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -18,9 +17,14 @@
  *
  * TODO: remote code
  * Uses ISR(PCINT1_vect) for local and Timer1 for remote
- *
+ * Needs F_CPU to be 1000000 Hz.
  */
  
+
+
+#if F_CPU != 1000000UL
+#error "F_CPU must be 100000 Hz. Other CPU frequencies are not yet supported."
+#endif
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -30,20 +34,33 @@
 #include "buttons.h"
 
 #define DEBOUNCE_TIME 40	// debounce time, in milliseconds
+#define REM_TIMEOUT 40000UL	// max time between remote packets, in microseconds
+
 
 static char but_getlocalbutton();
+static uint8_t but_isremotepressed();
+static uint8_t but_islocalpressed();
 
-static void (*but_intfunc)() = 0;// pointer to the set interrupt function
+static void (*but_intfunc)() = 0;	// pointer to the set interrupt function
 
 void butinit() {
+	DDRB &= ~(1<<REM_RX);			// make sure IR receiver is input
+	PORTB |= 1<<REM_RX;				// enable pullup
 	DDRC &= ~(PINC_BUTMASK);		// make sure all buttons are inputs
 	PORTC |= PINC_BUTMASK;			// inputs with pullups, that is
+	
+	TCCR1A = 0;						// Ensure timer is in 'normal' mode
+	TCCR1B = (0<<ICES1)|(1<CS10);	// Detect falling edge (start of timing), max count rate
+	TIMSK1 = 0;
 }
 
+/*
+ * Attaches a function to be called whenever a button interrupt occurs
+ */
 void but_setint(void (*f)()) {
 	PCICR |= 1<<PCIE1;				// enable pin-change interrupt
 	PCMSK1 |= PCI1_MASK;			// and enable each button interrupt
-	// TODO: Remote control interrupts
+	TIMSK1 = 1<<ICIE1;				// Enable input compare interrupt for remote receiver
 	
 	but_intfunc = f;
 }
@@ -53,7 +70,15 @@ void but_setint(void (*f)()) {
  * Returns enum but_type of button pressed
  */
 enum but_type but_getaction() {
-    return but_getlocalbutton();
+	while(1) {
+		if((~PINC) & PINC_BUTMASK) {
+			return but_getlocalbutton();
+		}
+		if(but_isremotepressed()) {
+			//while(but_isremotepressed());
+			return but_getremotebutton();
+		}
+	}
 }
 
 /*
@@ -61,7 +86,23 @@ enum but_type but_getaction() {
  * Returns non-zero if any are pressed, zero if none pressed.
  */
 uint8_t but_ispressed() {
-	return (~PINC) & PINC_BUTMASK;	// only local buttons currently implemented
+	return but_islocalpressed()||but_isremotepressed();
+}
+
+/*
+ * Determines whether a local button is pressed
+ * Returns the bitfield of pressed buttons, where 1 = pressed
+ */
+static uint8_t but_islocalpressed() {
+	return (~PINC) & PINC_BUTMASK;
+}
+
+/*
+ * Determines whether a remote button is pressed.
+ * Misses presses often since this code doesn't check ICR1.
+ */
+static uint8_t but_isremotepressed() {
+	return (~PINB) & 1<<REM_RX;
 }
 
 /*
@@ -83,9 +124,14 @@ static char but_getlocalbutton() {
 	PCIFR = 1<<PCIF1;	// clear PCINT1 caused by switch lifting
 	
 	return pressedbyte;
-}
+} 
 
 ISR(PCINT1_vect) {
+	// only run but_intfunc() if it has been set!
+	if(but_intfunc) but_intfunc();
+}
+
+ISR(TIMER1_CAPT_vect) {
 	// only run but_intfunc() if it has been set!
 	if(but_intfunc) but_intfunc();
 }

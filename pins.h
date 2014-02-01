@@ -28,7 +28,8 @@
 #define SPI_MOSI 3
 #define SPI_MISO 4
 #define VFD_CS 1
-#define EE_LED 0
+#define EE_LED 6
+#define REM_RX 0
 
 // on PORTC
 // Prefix should be changed to PINC
