@@ -19,7 +19,7 @@ This software requires specific tools to compile and specific hardware to run.
  * ATmega168 microcontroller
  * A 16-character M66004FP-based vacuum-fluorescent display connected to the 
    microcontroller's SPI bus and PB1 as chip select
- * (Optional) an LED attached to PB0 to indicate EEPROM writes
+ * (Optional) an LED attached to PB6 to indicate EEPROM writes
  * Momentary buttons connecting PC0-PC6 to ground
 
 ###Software
