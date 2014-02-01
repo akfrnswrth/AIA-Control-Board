@@ -209,7 +209,7 @@ static enum but_type but_getremotebutton() {
 	do {
 		if((~PINB) & 1<<REM_RX) pulselength = 0;
 		_delay_ms(1);
-		pulseleng th++;
+		pulselength++;
 	} while(pulselength < REM_TIMEOUT);
 	
 	switch(data) {
