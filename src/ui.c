@@ -351,9 +351,9 @@ static void ui_nameedit(uint8_t n_input) {
 			}
 			name_cursor[edit_pos] = 0x7f;
 			break;
-		case BUT_VOLINC:
-		case BUT_DIRUP:
-			name[edit_pos]++;
+		case BUT_VOLINC:		// volume knob right
+		case BUT_DIRDN:			// button down
+			name[edit_pos]++;	// go down the alphabet A-->B
 
 			if(name[edit_pos] == '!') name[edit_pos] = 'a';
 			else if(name[edit_pos] >= '{') name[edit_pos] = 'A';
@@ -364,9 +364,9 @@ static void ui_nameedit(uint8_t n_input) {
 			name_cursor[edit_pos] = name[edit_pos];
 
 			break;
-		case BUT_VOLDEC:
-		case BUT_DIRDN:
-			name[edit_pos]--;
+		case BUT_VOLDEC:		// volume knob left
+		case BUT_DIRUP:			// button up
+			name[edit_pos]--;	// go up the alphabet B-->A
 			
 			if(name[edit_pos] < ' ') name[edit_pos] = ')';
 			else if(name[edit_pos] == '&') name[edit_pos] = '9';
