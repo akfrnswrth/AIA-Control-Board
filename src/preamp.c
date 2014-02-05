@@ -24,6 +24,7 @@
 
 #include <avr/io.h>
 #include <avr/eeprom.h>
+#include <avr/pgmspace.h>
 #include <stdint.h>
 #include "pins.h"
 #include "preamp.h"
@@ -31,7 +32,16 @@
 #define PRE_NINPUTS 8
 #define PRE_MINTONE (-12)
 #define PRE_MAXTONE 12
-#define PRE_MAXVOL 127
+#define PRE_MAXVOL 38
+
+// logarithmic volume curve
+// as determined in "/misc/volume pot curve.xlsx"
+static const uint8_t PROGMEM pre_volcurve[39] = {
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 
+	18, 20, 22, 25, 28, 32, 36, 40, 45, 50, 57, 64, 71,
+	80, 90, 101, 113, 127, 143, 160, 180, 202, 227, 255
+}
+	
 
 // Non-volatile settings
 static uint8_t ee_volume EEMEM = 0;
