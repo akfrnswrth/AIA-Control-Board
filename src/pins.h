@@ -28,11 +28,11 @@
 #define SPI_MOSI 3
 #define SPI_MISO 4
 #define VFD_CS 1
+#define POT_CS 2
 #define EE_LED 6
-#define REM_RX 0
+#define REM_RX 0	// REM_RX MUST be on PB0 for input capture
 
 // on PORTC
-// Prefix should be changed to PINC
 #define PINC_ENTER 0
 #define PINC_BACK 1
 #define PINC_VOLUP 2
@@ -44,7 +44,6 @@
 			  	 (1<<PINC_LEFT)|(1<<PINC_RIGHT))
 
 // PCINT for PORTC
-// Prefix should be changed to PCI1
 #define PCI1_ENTER PCINT8
 #define PCI1_BACK PCINT9
 #define PCI1_VOLUP PCINT10

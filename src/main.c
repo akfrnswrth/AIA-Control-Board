@@ -43,7 +43,10 @@ static void init() {
 	PORTC = 0xff;
 	DDRD = 0x00;
 	PORTD = 0xff;
-
+	
+	DDRB |= 1<<EE_LED;		// make EEPROM access LED output
+	PORTB &= ~(1<<EE_LED);	// turn off LED
+	
 	vfdinit();			// start up VFD
 	preinit();			// start up preamp controls
 	butinit();			// set up button sensing

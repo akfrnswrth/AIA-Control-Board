@@ -29,6 +29,7 @@
 #include "pins.h"
 #include "vfd.h"
 #include "spi.h"
+#include "lang.h"
 
 // EEPROM brightness data
 static uint8_t EEMEM ee_activebrightness = 8;
@@ -41,8 +42,8 @@ static volatile uint8_t ram_idlebrightness = 1;
 static void vfd_load();
 
 void vfdinit() {
-	DDRB |= (1<<VFD_CS);	// chip select (CS) is output
 	PORTB |= (1<<VFD_CS);	// CS is high (disabled) until putd()
+	DDRB |= (1<<VFD_CS);	// chip select (CS) is output
 	
 	vfd_putd(VFD_POWEROFF);	// blank the display
 	vfd_putd(VFD_SETLENGTH | 0x07);	// 16 digits
@@ -56,7 +57,7 @@ void vfdinit() {
 	
 	vfd_load();					// load brightness values from EEPROM
 	
-	//return &vfd_vfdstream;
+	center_display_P(LANG_SPLASH);	// show splash message
 }
 
 uint8_t vfd_getactivebrightness() {
@@ -83,6 +84,7 @@ void vfd_putd(char d) {
 	spiinit(SPI_MSBFIRST, SPI_MODE3, SPI_CKDIV4);// set VFD spi mode
 	PORTB &= ~(1<<VFD_CS);	// select VFD chipselect
 	spi_transfer(d);		// shift out data
+	DDRB &=~(1<<SPI_SCK);	// SCK is now input w/pullup
 	while((PINB & (1<<SPI_SCK)) == 0);	// wait for VFD to release clock line
 }
 

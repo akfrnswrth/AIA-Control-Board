@@ -25,19 +25,16 @@
 #include "pins.h"
 
 void spiinit(uint8_t bit_order, uint8_t data_mode, uint8_t speed) {
-	DDRB |= (1<<SPI_MOSI);	// MOSI is output since this chip is master
-	DDRB &= ~(1<<SPI_SCK);	// SCK is pullup until further notice
-	PORTB |= 1<<SPI_SCK;
+	DDRB |= (1<<SPI_MOSI)|(1<<SPI_SCK);	// MOSI and SCK are output since this chip is master
 	SPCR = (1<<SPE)|bit_order|(1<<MSTR)|data_mode|speed;
 }
 
 char spi_transfer(char c) {
 	char r;
 	SPCR |= 1<<MSTR;				// ensure we're in master mode
-	DDRB |= 1<<SPI_SCK;				// SCK is now hard output
+	DDRB |= 1<<SPI_SCK;				// ensure SCK is hard output
 	SPDR = c;						// initiate transfer
 	while((SPSR & (1<<SPIF)) == 0);// wait for transfer to complete
-	DDRB &=~(1<<SPI_SCK);			// SCK is now pullup
 	r = SPDR;						// get received byte
 	return r;
 }

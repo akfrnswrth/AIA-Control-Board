@@ -33,7 +33,7 @@
 
 #define UI_HOLD_TIME 30		// time to hold volume value on display, in centiseconds
 
-static volatile uint8_t idle_timeout = UI_HOLD_TIME;	// centisecond idle timeout counter
+static volatile uint8_t idle_timeout = 0;	// centisecond idle timeout counter
 
 static void ui_idle();
 static void ui_showinput();
@@ -60,7 +60,8 @@ void uiinit() {
 	
 	set_sleep_mode(SLEEP_MODE_IDLE);// set IDLE as the sleep mode
 	
-	center_display_P(LANG_SPLASH);	// show splash message
+	vfd_idlebrightness();// calm VFD down
+	ui_showinput();		// go to default screen
 }
 
 /*
