@@ -41,10 +41,8 @@ static volatile uint8_t ram_idlebrightness = 1;
 static void vfd_load();
 
 void vfdinit() {
-	DDRB |= (1<<VFD_CS)|(1<<SPI_MOSI);		// chipselect is output
-	DDRB &= ~(1<<SPI_SCK);		// SCK is temporarily pullup
-	PORTB |= (1<<VFD_CS)|(1<<SPI_SCK);
-	spiinit(SPI_MSBFIRST, SPI_MODE3, SPI_CKDIV4);
+	DDRB |= (1<<VFD_CS);	// chip select (CS) is output
+	PORTB |= (1<<VFD_CS);	// CS is high (disabled) until putd()
 	
 	vfd_putd(VFD_POWEROFF);	// blank the display
 	vfd_putd(VFD_SETLENGTH | 0x07);	// 16 digits
@@ -82,12 +80,13 @@ static void vfd_load() {
 }
 
 void vfd_putd(char d) {
+	spiinit(SPI_MSBFIRST, SPI_MODE3, SPI_CKDIV4);// set VFD spi mode
 	PORTB &= ~(1<<VFD_CS);	// select VFD chipselect
 	spi_transfer(d);		// shift out data
 	while((PINB & (1<<SPI_SCK)) == 0);	// wait for VFD to release clock line
 }
 
-int vfd_putchar(char c/*, FILE * stream*/) {
+int vfd_putchar(char c) {
 	if(c < 0x20 || c > 0x7f) c = 0x7f;	// make invalid chars obvious
 	vfd_putd(c);
 	PORTB |= (1<<VFD_CS);	// clear VFD chipselect
