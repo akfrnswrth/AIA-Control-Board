@@ -28,4 +28,4 @@ This software requires specific tools to compile and specific hardware to run.
  * AVR toolchain (avr-gcc, avr-binutils, avrdude)
  * Basic GNU utilities (cp, make, rm, etc.)
 
-This software is included in WinAVR.
+The AVR toolchain and GNU utilities are included in WinAVR.
