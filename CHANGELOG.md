@@ -3,12 +3,14 @@ AIA Control Board software changelog
 
 Goals for 0.2.0
 ---------------
- * Implement & debug digital potentiometer control
  * Add changelog
+ * Implement digital potentiometer control
+ * Add support for rotary encoders
  
 Goals for Future Versions
 -------------------------
  * Implement headphone detection and output switching
+ * Implement automatic tone control behavior
 
 Previous Versions
 -----------------
