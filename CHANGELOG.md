@@ -3,7 +3,7 @@ AIA Control Board software changelog
 
 Goals for 0.2.0
 ---------------
- * Implement digital potentiometer control
+ * Implement & debug digital potentiometer control
  * Add changelog
  
 Goals for Future Versions

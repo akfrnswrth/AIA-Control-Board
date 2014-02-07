@@ -37,6 +37,7 @@
  * the same SCK pin of the AVR.
  *
  * TODO: Headphone detection and speaker control are not yet implemented.
+ * TODO: Tone behavior
  */
 
 #include <avr/io.h>
@@ -93,7 +94,6 @@ static void pre_load();
 static void pre_updatepots();
 
 void preinit() {
-	// TODO: HW initialization here
 	PORTB |= 1<<POT_CS;	// Pot CS is high
 	DDRB |= 1<<POT_CS;	// pot CS is output
 	

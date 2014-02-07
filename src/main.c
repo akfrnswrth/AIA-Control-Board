@@ -18,13 +18,7 @@
  *
  * Intended to run on ATMEGA168 
  *
- * Currently just shows UI, no hardware control implemented
- * TODO: 
- *  * HW control
- *  * Auto-brightness option
- *  * organize code within files
- *  * replace all strncpy with strlcpy
- *  * fix all occurrences of snprintf to always null-terminate
+ * Currently incomplete and pre-release.
  */ 
 
 

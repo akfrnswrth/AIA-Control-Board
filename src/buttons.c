@@ -17,7 +17,6 @@
  *
  * Designed to work with the Sony IR protocol. No guarantees.
  *
- * TODO: increase compatibility with other clock frequencies
  * Uses ISR(PCINT1_vect) for local and Timer1 for remote
  * Needs F_CPU to be 1000000 Hz.
  */
