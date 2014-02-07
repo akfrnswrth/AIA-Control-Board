@@ -35,7 +35,7 @@
 #include "buttons.h"
 #include "vfd.h"
 
-#define DEBOUNCE_TIME 40	// debounce time, in milliseconds
+#define DEBOUNCE_TIME 10	// debounce time, in milliseconds
 #define REM_TIMEOUT 40000U	// max time between remote packets, in milliseconds
 #define REM_ADDRESS 1		// device address to listen for
 
