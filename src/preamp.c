@@ -346,8 +346,8 @@ static void pre_updatepots() {
 	
 	// convert ram_vol, ram_bass, ram_treb to pot codes
 	volpot_val = pgm_read_byte(&(pre_volcurve[ram_volume]));
-	trebpot_val = pgm_read_byte(&(pre_tonecurve[ram_treb]));
-	basspot_val = pgm_read_byte(&(pre_tonecurve[ram_bass]));
+	trebpot_val = pgm_read_byte(&(pre_tonecurve[ram_treb-PRE_MINTONE]));
+	basspot_val = pgm_read_byte(&(pre_tonecurve[ram_bass-PRE_MINTONE]));
 	
 	// push values out to pots
 	spiinit(SPI_MSBFIRST, SPI_MODE0, SPI_CKDIV4);// set pot spi mode

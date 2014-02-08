@@ -9,6 +9,7 @@ What's New with v0.2.0
  
 Goals for Future Versions
 -------------------------
+ * Implement input selector control
  * Implement headphone detection and output switching
  * Implement automatic tone control behavior
  * Refine rotary encoder handling

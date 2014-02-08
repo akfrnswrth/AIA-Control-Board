@@ -22,7 +22,10 @@ This software requires specific tools to compile and specific hardware to run.
  * A control interface, which can be either or both:
      * A set of momentary buttons connecting PC0-PC6 to ground
      * A TSOP4838 or similar IR receiver on PB0 and a Sony TV-compatible remote control
- * (Technically optional) A set of three MCP42xxx SPI digital potentiometers daisy-chained to the microcontroller's SPI bus with PB2 as chip select.  The first pot in the chain controls volume, the second bass, and the third treble
+ * (Technically optional) A set of three MCP42xxx SPI digital potentiometers 
+   daisy-chained to the microcontroller's SPI bus with PB2 as chip select.  
+   The first pot in the chain controls volume, the second bass, and the third 
+   treble.
 
 ###Software
  * AVR toolchain (avr-gcc, avr-binutils, avrdude)
