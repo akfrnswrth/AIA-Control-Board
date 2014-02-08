@@ -351,7 +351,7 @@ static void pre_updatepots() {
 	
 	// push values out to pots
 	spiinit(SPI_MSBFIRST, SPI_MODE0, SPI_CKDIV4);// set pot spi mode
-	PORTB &= ~(1<POT_CS);	// enable pot CS
+	PORTB &= ~(1<<POT_CS);	// enable pot CS
 	spi_transfer(POT_WRITE|POT_BOTH);
 	spi_transfer(trebpot_val);	// send to pot 3 (treb)
 	spi_transfer(POT_WRITE|POT_BOTH);
