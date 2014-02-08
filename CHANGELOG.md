@@ -1,11 +1,10 @@
 AIA Control Board software changelog
 ====================================
 
-What's New with v0.2.0
+What's New with v0.2.1
 ---------------
- * Added changelog
- * Implemented digital potentiometer control
- * Added support for rotary encoders
+ * Bugfix for Issue #15: "Tone control pots are all the way down at +0 instead
+   of being centered"
  
 Goals for Future Versions
 -------------------------
@@ -16,6 +15,11 @@ Goals for Future Versions
 
 Previous Versions
 -----------------
+
+###Version 0.2.0
+ * Added changelog
+ * Implemented digital potentiometer control
+ * Added support for rotary encoders
 
 ###Version 0.1.0
 
