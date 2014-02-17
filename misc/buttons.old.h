@@ -1,5 +1,5 @@
 /*
- * hi.h - Handle button presses (human interaction) both local and remote
+ * buttons.h - Handle button presses both local and remote
  * Copyright (C) 2014 Ali Kocaturk <akfrnswrth@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -41,11 +41,14 @@ enum but_type {
 // sets up inputs (TBI: Timer)
 void butinit();
 
-// Accepts any outstanding button press
-enum but_type but_pop();
+// tie a function to the button interrupts
+void but_setint(void (*f)());
 
-// Checks for any outstanding button presses
-enum but_type but_peek();
+// Waits for and debounces a press
+enum but_type but_getaction();
+
+// returns nonzero if any buttons are pressed
+uint8_t but_ispressed();
 
 
 #endif

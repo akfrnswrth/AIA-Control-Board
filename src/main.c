@@ -47,6 +47,8 @@ static void init() {
 	butinit();			// set up button sensing
 	uiinit();			// set up the UI and its interrupts
 	
+	//vfdinit();			// re-init VFD to fix problems due to ArduinoISP
+	
 	sei();				// enable all interrupts
 }
 

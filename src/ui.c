@@ -69,13 +69,13 @@ void uiinit() {
  * displays menu/status
  */
 void uiloop() {
-	while(!but_ispressed());		// wait for a button press
+	while(!but_peek());		// wait for a button press
 	ui_buttonISR();					// go do menu stuff
 	
 	//cli();							// block interrupts from messing with idle_timeout access
 	if(idle_timeout > 0) {			// block EEPROM writes from BUT_NONE
 		while(idle_timeout > 0) {		// delay ui_idle until timeout expires to avoid excessive EEPROM writes
-			if(but_ispressed()) {
+			if(but_peek()) {
 				ui_buttonISR();
 			}
 			
@@ -135,9 +135,8 @@ static void ui_rootmenu() {
 			break;
 		}
 		
-		do {
-			pressed = but_getaction();
-		} while(pressed == BUT_NONE);
+		while(!but_peek());
+		pressed = but_pop();
 		
 		switch(pressed) {
 		case BUT_SELUPL:
@@ -201,9 +200,8 @@ static void ui_tonemenu() {
 			break;
 		}
 		
-		do {
-			pressed = but_getaction();
-		} while(pressed == BUT_NONE);
+		while(!but_peek());
+		pressed = but_pop();
 		
 		switch(pressed) {
 		case BUT_SELUPL:
@@ -262,9 +260,8 @@ static void ui_namemenu() {
 		strlcat(msg, name, 17);
 		update_display(msg);
 		
-		do {
-			pressed = but_getaction();
-		} while(pressed == BUT_NONE);
+		while(!but_peek());
+		pressed = but_pop();
 		
 		switch(pressed) {
 		case BUT_SELUPL:
@@ -338,9 +335,9 @@ static void ui_nameedit(uint8_t n_input) {
 			name_getprefix(msg, n_input);
 			strcat(msg, name_cursor);
 			update_display(msg);
-		} while(!but_ispressed());
+		} while(!but_peek());
 		
-		pressed = but_getaction();	// debounce
+		pressed = but_pop();	// debounce
 		
 		switch(pressed) {
 		case BUT_SELUPL:
@@ -418,9 +415,8 @@ static void ui_brightnessmenu() {
 			break;
 		}
 		
-		do {
-			pressed = but_getaction();
-		} while(pressed == BUT_NONE);
+		while(!but_peek());
+		pressed = but_pop();
 		
 		switch(pressed) {
 		case BUT_SELUPL:
@@ -553,7 +549,7 @@ static void ui_buttonISR() {
 	enum but_type pressed;
 	char msg[17];	// buffer to reduce flicker while adjusting volume
 	
-	pressed = but_getaction();
+	pressed = but_pop();
 	
 	if(pressed != BUT_NONE) {
 		vfd_activebrightness();	// set VFD to active brightness

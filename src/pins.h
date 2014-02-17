@@ -39,9 +39,9 @@
 #define PINC_VOLDN 3
 #define PINC_LEFT 4
 #define PINC_RIGHT 5
-#define PINC_BUTMASK ((1<<PINC_ENTER)|(1<<PINC_BACK)| \
-			  	 (1<<PINC_VOLUP)|(1<<PINC_VOLDN)| \
-			  	 (1<<PINC_LEFT)|(1<<PINC_RIGHT))
+#define PINC_BUTMASK ((1<<PINC_ENTER)|(1<<PINC_BACK)) 
+#define PINC_ENCMASK ((1<<PINC_VOLUP)|(1<<PINC_VOLDN)| \
+					  (1<<PINC_LEFT)|(1<<PINC_RIGHT))
 
 // PCINT for PORTC
 #define PCI1_ENTER PCINT8
