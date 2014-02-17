@@ -25,6 +25,7 @@
 #include <avr/io.h>
 #include <stdio.h>
 #include <util/delay.h>
+#include <avr/interrupt.h>
 #include "vfd.h"
 #include "preamp.h"
 #include "ui.h"
@@ -45,6 +46,8 @@ static void init() {
 	preinit();			// start up preamp controls
 	butinit();			// set up button sensing
 	uiinit();			// set up the UI and its interrupts
+	
+	sei();				// enable all interrupts
 }
 
 int main(void) {

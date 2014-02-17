@@ -20,7 +20,7 @@
 #include <avr/io.h>
 #include <stdio.h>
 #include <string.h>
-#include <avr/sleep.h>
+//#include <avr/sleep.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
@@ -32,9 +32,9 @@
 #include "lang.h"
 #include "ui.h"
 
-#define UI_HOLD_TIME 30		// time to hold volume value on display, in centiseconds
+#define UI_HOLD_TIME 3000	// time to hold volume value on display, in milliseconds
 
-static volatile uint8_t idle_timeout = 0;	// centisecond idle timeout counter
+static volatile uint16_t idle_timeout = 0;	// centisecond idle timeout counter
 
 static void ui_idle();
 static void ui_showinput();
@@ -57,32 +57,39 @@ static void ui_showtonetreb();
  * when uiloop is called.
  */
 void uiinit() {
-	but_setint(ui_buttonISR);
+	//but_setint(ui_buttonISR);
 	
-	set_sleep_mode(SLEEP_MODE_IDLE);// set IDLE as the sleep mode
+	//set_sleep_mode(SLEEP_MODE_IDLE);// set IDLE as the sleep mode
 	
 	vfd_idlebrightness();// calm VFD down
 	ui_showinput();		// go to default screen
 }
 
 /*
- * handles any delays left by interrupts, then puts CPU to sleep
+ * displays menu/status
  */
 void uiloop() {
-	cli();							// block interrupts from messing with idle_timeout access
+	while(!but_ispressed());		// wait for a button press
+	ui_buttonISR();					// go do menu stuff
+	
+	//cli();							// block interrupts from messing with idle_timeout access
 	if(idle_timeout > 0) {			// block EEPROM writes from BUT_NONE
 		while(idle_timeout > 0) {		// delay ui_idle until timeout expires to avoid excessive EEPROM writes
+			if(but_ispressed()) {
+				ui_buttonISR();
+			}
+			
 			idle_timeout--;
-			sei();						// make sure interrupts work while waiting
-			_delay_ms(100);
-			cli();
+	//		sei();						// make sure interrupts work while waiting
+			_delay_ms(1);
+	//		cli();
 		}
 		ui_idle();						// run idle tasks (show input, save settings to EEPROM)
 	}
-	sleep_enable();
-	sei();
-	sleep_cpu();
-	sleep_disable();
+	//sleep_enable();
+	//sei();
+	//sleep_cpu();
+	//sleep_disable();
 }
 
 /*

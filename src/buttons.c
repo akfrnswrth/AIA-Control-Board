@@ -33,7 +33,7 @@
 #include <util/delay.h>
 #include "pins.h"
 #include "buttons.h"
-#include "vfd.h"
+//#include "vfd.h"
 
 #define DEBOUNCE_TIME 10	// debounce time, in milliseconds
 #define REM_TIMEOUT 40000U	// max time between remote packets, in milliseconds
@@ -147,7 +147,7 @@ static enum but_type but_getremotebutton() {
 	uint16_t packet, pulsestart, pulseend, pulselength, listenstart;
 	uint8_t good, bit, data, address;
 	
-	char msg[17];
+//	char msg[17];
 	
 	good = 0;
 	while(!good) {
@@ -261,9 +261,9 @@ static enum but_type but_getremotebutton() {
 	case 0x33:
 		return BUT_DIRRIGHT;
 	default:
-		snprintf_P(msg, 17, PSTR("E: Remote 0x%02x"), data);
-		update_display(msg);
-		_delay_ms(250);
+		//snprintf_P(msg, 17, PSTR("E: Remote 0x%02x"), data);
+		//update_display(msg);
+		//_delay_ms(250);
 		return BUT_NONE;
 	}
 }

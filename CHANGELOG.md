@@ -1,10 +1,5 @@
 AIA Control Board software changelog
 ====================================
-
-What's New with v0.2.1
----------------
- * Bugfix for Issue #15: "Tone control pots are all the way down at +0 instead
-   of being centered"
  
 Goals for Future Versions
 -------------------------
@@ -15,6 +10,10 @@ Goals for Future Versions
 
 Previous Versions
 -----------------
+
+###Version 0.2.1
+ * Bugfix for Issue #15: "Tone control pots are all the way down at +0 instead
+   of being centered"
 
 ###Version 0.2.0
  * Added changelog
