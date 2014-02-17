@@ -20,7 +20,8 @@ This software requires specific tools to compile and specific hardware to run.
  * A 16-character M66004FP-based vacuum-fluorescent display connected to the 
    microcontroller's SPI bus and PB1 as chip select
  * A control interface, which can be either or both:
-     * A set of momentary buttons connecting PC0-PC6 to ground
+     * A pair of momentary buttons on PC0 and PC1
+	 * A pair of rotary encoders connected to {PC2, PC3} and {PC4, PC5}
      * A TSOP4838 or similar IR receiver on PB0 and a Sony TV-compatible remote control
  * (Technically optional) A set of three MCP42xxx SPI digital potentiometers 
    daisy-chained to the microcontroller's SPI bus with PB2 as chip select.  

@@ -1,12 +1,17 @@
 AIA Control Board software changelog
 ====================================
  
+What's New in Version 0.3.0
+---------------------------
+ * Overhaul of buttons.c to get encoders to work properly
+ * Support for local left, right, volup, and voldn buttons dropped to allow decoders
+ * Menus moved to non-interrupt context to allow hardware control to run while in menus
+ 
 Goals for Future Versions
 -------------------------
  * Implement input selector control
  * Implement headphone detection and output switching
  * Implement automatic tone control behavior
- * Refine rotary encoder handling
 
 Previous Versions
 -----------------
