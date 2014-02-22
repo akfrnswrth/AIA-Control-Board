@@ -11,7 +11,6 @@
 #include <avr/interrupt.h>
 #include "pins.h"
 #include "buttons.h"
-#include "vfd.h"
 
 #define BUT_DEBTIME 10		// button debounce time, in milliseconds
 #define ENC_DEBTIME 20		// encoder debounce time, in 100 microseconds
